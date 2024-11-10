@@ -2,7 +2,7 @@ import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 
 export default function Home() {
-  const [videoUrl, setVideoUrl] = useState<string>(""); // State for the video URL input
+  const [videoUrl, setVideoUrl] = useState<string>("");
   const [summary, setSummary] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -53,7 +53,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 sm:p-6">
-      <div className="max-w-4xl w-full bg-white rounded-lg shadow-lg p-6 sm:p-8">
+      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 sm:p-8">
         <h1 className="text-xl sm:text-2xl font-bold mb-4 text-center text-blue-600">
           YouTube Video Summarizer
         </h1>
@@ -81,7 +81,7 @@ export default function Home() {
         <h2 className="text-lg sm:text-xl font-semibold mt-6 text-gray-700">
           Summary
         </h2>
-        <div className="mt-2 p-3 sm:p-4 bg-gray-100 rounded-md border border-gray-200 max-h-80 overflow-y-auto">
+        <div className="mt-2 p-3 sm:p-4 bg-gray-100 rounded-md border border-gray-200 max-h-60 overflow-y-auto">
           {summary ? (
             <ReactMarkdown>{summary}</ReactMarkdown>
           ) : (
