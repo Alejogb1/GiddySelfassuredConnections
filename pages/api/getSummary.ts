@@ -12,7 +12,7 @@ interface SummaryResponseBody {
 }
 
 // Initialize Google Generative AI with API key
-const genAI = new GoogleGenerativeAI("AIzaSyBc6r8pZgDN6zw373sZeJCFZYIyXNULJTs");
+const genAI = new GoogleGenerativeAI(process.env["gemini"]);
 
 export default async function handler(
   req: NextApiRequest,
