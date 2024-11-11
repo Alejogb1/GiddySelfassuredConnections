@@ -1,0 +1,11 @@
+diff --git a/node_modules/youtube-transcript-api/src/index.js b/node_modules/youtube-transcript-api/src/index.js
+index 64dda1f..77a9a8b 100644
+--- a/node_modules/youtube-transcript-api/src/index.js
++++ b/node_modules/youtube-transcript-api/src/index.js
+@@ -1,5 +1,5 @@
+ import axios from "axios";
+-import cheerio from "cheerio";
++import * as cheerio from "cheerio";
+ 
+ class TranscriptAPI {
+   static async getTranscript(id, config = {}) {
