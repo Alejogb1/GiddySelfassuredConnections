@@ -59,5 +59,13 @@ export default async function handler(
     } else {
       res.status(500).json({ summary: "", error: "Error generating summary. Please try again later." });
     }
+    if (error.code === "ECONNABORTED") {
+      res.status(504).json({ summary: "", error: "Request timed out. Please try again later." });
+    } else if (error.message.includes("Transcript is disabled")) {
+      res.status(400).json({ summary: "", error: "Transcript is disabled for this video." });
+    } else {
+      res.status(500).json({ summary: "", error: "Error generating summary. Please try again later." });
+    }
+
   }
 }
