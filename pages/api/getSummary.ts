@@ -31,17 +31,13 @@ export default async function handler(
   }
 
   try {
-    // Step 1: Fetch the transcript using YoutubeTranscript
-    console.log("Fetching transcript for video ID:", videoId);
     const transcript = await YoutubeTranscript.fetchTranscript(videoId);
     const transcriptText = transcript.map((entry) => entry.text).join(" ");
-    console.log("Transcript fetched successfully");
     const prompt =
       "Con tono natural resume este video en espanol siendo conciso claro en plain text en un parrafo y sin saltos de linea: ";
     const fullPrompt = `${prompt}\n\n${transcriptText}`;
 
-    // Step 2: Generate summary using Google Generative AI
-    console.log("Generating summary for the fetched transcript");
+    // Generate summary using Google Generative AI
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     const result = await model.generateContent(fullPrompt);
     const summary = result.response?.text() || "No summary generated";
@@ -50,10 +46,16 @@ export default async function handler(
   } catch (error: any) {
     console.error("Error occurred during summary generation:", error);
 
-    // More detailed error response for the frontend
-    res.status(500).json({
-      summary: "",
-      error: error.message || "Error generating summary. Check backend logs.",
-    });
+    // More detailed error response
+    if (error.message.includes("Transcript is disabled")) {
+      res
+        .status(400)
+        .json({ summary: "", error: "Transcript is disabled for this video." });
+    } else {
+      res.status(500).json({
+        summary: "",
+        error: `Error generating summary: ${error.message}`,
+      });
+    }
   }
 }
