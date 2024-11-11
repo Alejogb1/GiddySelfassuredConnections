@@ -1,5 +1,8 @@
+// pages/api/getsummary.js (or getsummary.ts if using TypeScript)
+
 import type { NextApiRequest, NextApiResponse } from "next";
-import TranscriptAPI from "./transcript";
+import axios from "axios";
+import * as cheerio from "cheerio";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 interface SummaryRequestBody {
@@ -19,6 +22,52 @@ if (!process.env.gemini) {
 }
 const genAI = new GoogleGenerativeAI(process.env.gemini);
 
+// Include the TranscriptAPI code directly
+class TranscriptAPI {
+  static async getTranscript(id: string, config = {}) {
+    try {
+      const url = new URL("https://youtubetranscript.com");
+      url.searchParams.set("server_vid2", id);
+
+      const response = await axios.get(url.toString(), config);
+      const $ = cheerio.load(response.data, undefined, false);
+      const err = $("error");
+
+      if (err.length) throw new Error(err.text());
+
+      return $("transcript text")
+        .map((i, elem) => {
+          const $a = $(elem);
+          return {
+            text: $a.text(),
+            start: Number($a.attr("start")),
+            duration: Number($a.attr("dur")),
+          };
+        })
+        .toArray();
+    } catch (error) {
+      console.error(`Error fetching transcript for video ID ${id}:`, error);
+      throw error; // Re-throw the error to be handled in the calling function
+    }
+  }
+
+  static async validateID(id: string, config = {}) {
+    const url = new URL("https://video.google.com/timedtext");
+    url.searchParams.set("type", "track");
+    url.searchParams.set("v", id);
+    url.searchParams.set("id", "0");
+    url.searchParams.set("lang", "en");
+
+    try {
+      await axios.get(url.toString(), config);
+      return true;
+    } catch (error) {
+      console.error(`Error validating video ID ${id}:`, error);
+      return false;
+    }
+  }
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<SummaryResponseBody>
@@ -36,15 +85,15 @@ export default async function handler(
   }
 
   try {
-    // Step 1: Fetch the transcript using the custom TranscriptAPI
+    // Step 1: Fetch the transcript using the TranscriptAPI
     console.log("Fetching transcript for video ID:", videoId);
     const transcriptArray = await TranscriptAPI.getTranscript(videoId);
-    const transcriptText = transcriptArray.map(entry => entry.text).join(" ");
+    const transcriptText = transcriptArray.map((entry) => entry.text).join(" ");
     console.log("Transcript fetched successfully");
 
     // Predefined prompt in Spanish
     const prompt =
-      "Con tono natural resume este video en español siendo conciso y claro en texto plano en un párrafo y sin saltos de línea: ";
+      "Con tono natural resume este video en español siendo conciso y claro en texto plano en un párrafo y sin saltos de línea:";
     const fullPrompt = `${prompt}\n\n${transcriptText}`;
 
     // Step 2: Generate summary using Google Generative AI
@@ -57,13 +106,22 @@ export default async function handler(
   } catch (error: any) {
     console.error("Error occurred during summary generation:", error);
 
-    // Send specific error messages based on the error type
-    if (error.message.includes("transcripts disabled for that video") || error.message.includes("Transcript is disabled")) {
-      res.status(400).json({ summary: "", error: "Transcript is disabled for this video." });
+    // Handle transcript errors
+    if (
+      error.message.includes("transcripts disabled for that video") ||
+      error.message.includes("Transcript is disabled")
+    ) {
+      res
+        .status(400)
+        .json({ summary: "", error: "Transcript is disabled for this video." });
     } else if (error.code === "ECONNABORTED") {
-      res.status(504).json({ summary: "", error: "Request timed out. Please try again later." });
+      res
+        .status(504)
+        .json({ summary: "", error: "Request timed out. Please try again later." });
     } else {
-      res.status(500).json({ summary: "", error: `Error generating summary: ${error.message}` });
+      res
+        .status(500)
+        .json({ summary: "", error: `Error generating summary: ${error.message}` });
     }
   }
 }
