@@ -1,3 +1,4 @@
+"server use strict";
 import axios from "axios";
 import * as cheerio from "cheerio"; // Adjusted import
 
