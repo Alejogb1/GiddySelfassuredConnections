@@ -1,6 +1,5 @@
-
 import type { NextApiRequest, NextApiResponse } from "next";
-import TranscriptAPI from "youtube-transcript-api";
+import TranscriptAPI from "./transcript";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 interface SummaryRequestBody {
@@ -25,7 +24,7 @@ export default async function handler(
     return;
   }
 
-  const { videoId, prompt } = req.body as SummaryRequestBody;
+  const { videoId } = req.body as SummaryRequestBody;
 
   if (!videoId) {
     res.status(400).json({ summary: "", error: "Video ID is required" });
@@ -33,18 +32,18 @@ export default async function handler(
   }
 
   try {
-    // Step 1: Fetch the transcript using youtube-transcript-api
+    // Step 1: Fetch the transcript using the custom TranscriptAPI
     console.log("Fetching transcript for video ID:", videoId);
     const transcriptArray = await TranscriptAPI.getTranscript(videoId);
     const transcriptText = transcriptArray.map(entry => entry.text).join(" ");
     console.log("Transcript fetched successfully");
 
-    // Step 2: Combine the prompt with the transcript text (optional)
+    // Predefined prompt in Spanish
     const prompt =
-    "Con tono natural resume este video en espanol siendo conciso claro en plain text en un parrafo y sin saltos de linea: ";
-  const fullPrompt = `${prompt}\n\n${transcriptText}`;
-  
-    // Step 3: Generate summary using Google Generative AI
+      "Con tono natural resume este video en espanol siendo conciso claro en plain text en un parrafo y sin saltos de linea: ";
+    const fullPrompt = `${prompt}\n\n${transcriptText}`;
+
+    // Step 2: Generate summary using Google Generative AI
     console.log("Generating summary with custom prompt");
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     const result = await model.generateContent(fullPrompt);
@@ -54,7 +53,7 @@ export default async function handler(
   } catch (error: any) {
     console.error("Error occurred during summary generation:", error);
 
-    // Check if the error is due to disabled transcripts
+    // Handle transcript errors
     if (error.message.includes("transcripts disabled for that video")) {
       res.status(400).json({ summary: "", error: "Transcript is disabled for this video." });
     } else {
