@@ -22,7 +22,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
-  ],
+, "pages/api/transcript.js"  ],
   "exclude": [
     "node_modules"
   ]

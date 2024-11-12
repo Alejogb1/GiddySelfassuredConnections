@@ -1,10 +1,12 @@
-// pages/api/getsummary.js (or getsummary.ts if using TypeScript)
+// pages/api/getsummary.ts
 
 import type { NextApiRequest, NextApiResponse } from "next";
 import axios from "axios";
 import * as cheerio from "cheerio";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import Cors from "cors";
 
+// Define the types for request and response bodies
 interface SummaryRequestBody {
   videoId: string;
   prompt?: string;
@@ -13,6 +15,29 @@ interface SummaryRequestBody {
 interface SummaryResponseBody {
   summary: string;
   error?: string;
+}
+
+// Initialize the CORS middleware
+const cors = Cors({
+  origin: "*", // Replace "*" with your client domain for better security
+  methods: ["POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type"],
+});
+
+// Helper method to wait for middleware to execute before continuing
+function runMiddleware(
+  req: NextApiRequest,
+  res: NextApiResponse,
+  fn: Function
+) {
+  return new Promise<void>((resolve, reject) => {
+    fn(req, res, (result: any) => {
+      if (result instanceof Error) {
+        return reject(result);
+      }
+      return resolve();
+    });
+  });
 }
 
 // Initialize Google Generative AI with API key
@@ -30,7 +55,7 @@ class TranscriptAPI {
       url.searchParams.set("server_vid2", id);
 
       const response = await axios.get(url.toString(), config);
-      const $ = cheerio.load(response.data, undefined, false);
+      const $ = cheerio.load(response.data);
       const err = $("error");
 
       if (err.length) throw new Error(err.text());
@@ -72,6 +97,15 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<SummaryResponseBody>
 ) {
+  // Run the CORS middleware
+  await runMiddleware(req, res, cors);
+
+  // Handle preflight requests
+  if (req.method === "OPTIONS") {
+    res.status(200).end();
+    return;
+  }
+
   if (req.method !== "POST") {
     res.status(405).json({ summary: "", error: "Method Not Allowed" });
     return;
@@ -93,7 +127,7 @@ export default async function handler(
 
     // Predefined prompt in Spanish
     const prompt =
-      "Con tono natural resume este video en español siendo conciso y claro en texto plano en un párrafo y sin saltos de línea:";
+      "Con tono natural, resume este video en español siendo conciso y claro en texto plano en un párrafo y sin saltos de línea:";
     const fullPrompt = `${prompt}\n\n${transcriptText}`;
 
     // Step 2: Generate summary using Google Generative AI
