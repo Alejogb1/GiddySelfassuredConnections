@@ -15,6 +15,7 @@
     "cheerio": "^1.0.0",
     "cors": "^2.8.5",
     "googleapis": "^144.0.0",
+    "http-proxy": "^1.18.1",
     "next": "^14.1.0",
     "patch-package": "^8.0.0",
     "postinstall-postinstall": "^2.1.0",
@@ -22,7 +23,8 @@
     "react-dom": "18.2.0",
     "react-markdown": "^9.0.1",
     "youtube-transcript": "^1.2.1",
-    "youtube-transcript-api": "^1.1.2"
+    "youtube-transcript-api": "^1.1.2",
+    "youtube-video-transcript": "^1.0.6"
   },
   "devDependencies": {
     "@types/node": "^20.11.6",
