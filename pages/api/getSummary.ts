@@ -56,7 +56,7 @@ export default async function handler(
     console.log("Transcript fetched successfully");
 
     const prompt =
-      "Con tono natural, resume este video en español siendo conciso y claro en texto plano en un párrafo y sin saltos de línea:";
+      "Con tono natural, resume este video en español sin saltos de linea, que aborde las conclusiones. Tambien, agrega 5 bullet points de los detalles y especifciaciones mencionadas mas importantes en el video.";
     const fullPrompt = `${prompt}\n\n${transcriptText}`;
     // Generate summary using Google Generative AI
     console.log("Generating summary with custom prompt");
